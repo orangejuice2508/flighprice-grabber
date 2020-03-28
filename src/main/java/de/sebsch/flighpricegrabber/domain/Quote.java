@@ -5,20 +5,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Quote {
 
-    @JsonProperty("QuoteId")
-    private Long id;
+    @JsonProperty("id")
+    private String id;
 
-    @JsonProperty("MinPrice")
-    private Long price;
+    @JsonProperty("flyFrom")
+    private String originAirport;
 
-    @JsonProperty("QuoteDateTime")
-    private LocalDateTime dateTime;
+    @JsonProperty("flyTo")
+    private String destinationAirport;
+
+    @JsonProperty("price")
+    private Integer price;
 
 }

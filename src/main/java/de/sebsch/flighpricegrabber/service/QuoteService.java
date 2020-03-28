@@ -1,48 +1,43 @@
 package de.sebsch.flighpricegrabber.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.sebsch.flighpricegrabber.domain.FilterParameters;
+import de.sebsch.flighpricegrabber.domain.FlightParameters;
 import de.sebsch.flighpricegrabber.domain.Quote;
-import de.sebsch.flighpricegrabber.domain.QuoteSearchParameters;
-import de.sebsch.flighpricegrabber.util.Constants;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Objects;
 
+@Slf4j
 @Service
 public class QuoteService {
 
-    private Constants constants;
+    private static final String quoteBaseUrl = "https://api.skypicker.com/flights";
 
-    @Autowired
-    public QuoteService(Constants constants) {
-        this.constants = constants;
+    public List<Quote> getQuotes(FlightParameters searchParameters, FilterParameters filterParameters) throws JsonProcessingException {
+
+        String uri = quoteBaseUrl + "?" +
+                searchParameters.toUriParameters() + "&" +
+                filterParameters.toUriParameters();
+
+        ResponseEntity<String> responseEntity = new RestTemplate().getForEntity(uri, String.class);
+
+        return deseralizeResponse(responseEntity);
     }
 
-    public List<Quote> createQuoteSession(QuoteSearchParameters searchParameters) {
+    private List<Quote> deseralizeResponse(ResponseEntity<String> responseEntity) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode dataNode = objectMapper.readTree(Objects.requireNonNull(responseEntity.getBody())).get("data");
 
-        HttpEntity<?> httpEntity = new HttpEntity<>(searchParameters.formatAsBody(), getHeaders(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
-        HttpEntity<String> entity = new RestTemplate().exchange(constants.getPricingBaseUrl(), HttpMethod.POST, httpEntity, String.class);
-
-        return null;
-    }
-
-    private MultiValueMap<String, String> getBody() {
-        return null;
-    }
-
-    private MultiValueMap<String, String> getHeaders(String contentTypeValue) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("x-rapidapi-host", constants.getHost());
-        headers.add("x-rapidapi-key", constants.getApiKey());
-        headers.add("content-type", contentTypeValue);
-
-        return headers;
+        return objectMapper.readValue(dataNode.toString(), new TypeReference<>() {
+        });
     }
 
 
