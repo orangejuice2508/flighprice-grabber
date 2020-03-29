@@ -1,15 +1,15 @@
 package de.sebsch.flighpricegrabber.domain;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Getter
 @Setter
-@AllArgsConstructor
+@ToString(exclude = {"locale", "currency", "partnerMarket", "partner"})
 public class FlightParameters {
 
     private final String locale = "de";
@@ -40,6 +40,15 @@ public class FlightParameters {
                 "curr" + "=" + currency + "&" +
                 "partner_market" + "=" + partnerMarket + "&" +
                 "partner" + "=" + partner;
+    }
+
+    public FlightParameters(LocalDate outboundDate, LocalDate inboundDate, FlightType flightType, Integer adults, String adultHoldBag, Cabin cabin) {
+        this.outboundDate = outboundDate;
+        this.inboundDate = inboundDate;
+        this.flightType = flightType;
+        this.adults = adults;
+        this.adultHoldBag = adultHoldBag;
+        this.cabin = cabin;
     }
 
     public enum FlightType {

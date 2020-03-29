@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,15 +22,38 @@ public class QuoteService {
 
     private static final String quoteBaseUrl = "https://api.skypicker.com/flights";
 
-    public List<Quote> getQuotes(FlightParameters searchParameters, FilterParameters filterParameters) throws JsonProcessingException {
+    public List<Quote> getQuotes(FlightParameters flightParameters, FilterParameters filterParameters) {
+
+        log.info("Start of getting quotes for flight parameters: " + flightParameters.toString());
+
+        List<Quote> result = Collections.emptyList();
 
         String uri = quoteBaseUrl + "?" +
-                searchParameters.toUriParameters() + "&" +
+                flightParameters.toUriParameters() + "&" +
                 filterParameters.toUriParameters();
 
         ResponseEntity<String> responseEntity = new RestTemplate().getForEntity(uri, String.class);
 
-        return deseralizeResponse(responseEntity);
+        try {
+            result = deseralizeResponse(responseEntity);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        log.info("End of getting quotes for flight parameters: " + flightParameters.toString());
+
+        return result;
+    }
+
+    public int calculateTotalPrice(List<Quote> quotes) {
+        return quotes
+                .stream()
+                .map(Quote::getPrice)
+                .reduce(0, Integer::sum);
+    }
+
+    public double normalizeTotalPrice(int basisTotalPrice, int newTotalPrice) {
+        return (double) newTotalPrice / basisTotalPrice * 100;
     }
 
     private List<Quote> deseralizeResponse(ResponseEntity<String> responseEntity) throws JsonProcessingException {
